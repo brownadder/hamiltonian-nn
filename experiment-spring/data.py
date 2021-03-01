@@ -13,9 +13,9 @@ def hamiltonian_fn(coords):
     return H
 
 def dynamics_fn(t, coords):
-    dcoords = autograd.grad(hamiltonian_fn)(coords)
-    dqdt, dpdt = np.split(dcoords,2)
-    S = np.concatenate([dpdt, -dqdt], axis=-1)
+    dcoords = autograd.grad(hamiltonian_fn)(coords)  
+    dHdq, dHdp = np.split(dcoords,2) 
+    S = np.concatenate([dHdp, -dHdq], axis=-1)
     return S
 
 def get_trajectory(t_span=[0,3], timescale=10, radius=None, y0=None, noise_std=0.1, **kwargs):
@@ -46,9 +46,9 @@ def get_dataset(seed=0, samples=50, test_split=0.5, **kwargs):
     np.random.seed(seed)
     xs, dxs = [], []
     for s in range(samples):
-        x, y, dx, dy, t = get_trajectory(**kwargs)
-        xs.append( np.stack( [x, y]).T )
-        dxs.append( np.stack( [dx, dy]).T )
+        q, p, dqdt, dpdt, t = get_trajectory(**kwargs)
+        xs.append( np.stack( [q, p]).T )
+        dxs.append( np.stack( [dqdt, dpdt]).T )
         
     data['x'] = np.concatenate(xs)
     data['dx'] = np.concatenate(dxs).squeeze()
@@ -61,17 +61,19 @@ def get_dataset(seed=0, samples=50, test_split=0.5, **kwargs):
     data = split_data
     return data
 
-def get_field(xmin=-1.2, xmax=1.2, ymin=-1.2, ymax=1.2, gridsize=20):
+def get_field(qmin=-1.2, qmax=1.2, pmin=-1.2, pmax=1.2, gridsize=20):
     field = {'meta': locals()}
 
     # meshgrid to get vector field
-    b, a = np.meshgrid(np.linspace(xmin, xmax, gridsize), np.linspace(ymin, ymax, gridsize))
-    ys = np.stack([b.flatten(), a.flatten()])
+    b, a = np.meshgrid(np.linspace(qmin, qmax, gridsize), np.linspace(pmin, pmax, gridsize))
+    pq = np.stack([b.flatten(), a.flatten()])
+    pq = pq.T
     
     # get vector directions
-    dydt = [dynamics_fn(None, y) for y in ys.T]
-    dydt = np.stack(dydt).T
-
-    field['x'] = ys.T
-    field['dx'] = dydt.T
+    dpq_dt = [dynamics_fn(None, pq_i) for pq_i in pq]
+    dpq_dt = np.stack(dpq_dt).T
+    dpq_dt = dpq_dt.T
+    
+    field['x'] = pq
+    field['dx'] = dpq_dt
     return field

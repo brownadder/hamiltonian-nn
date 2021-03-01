@@ -4,6 +4,7 @@
 import numpy as np
 import gym
 import scipy, scipy.misc
+from PIL import Image
 
 import os, sys
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,7 +29,11 @@ def get_theta(obs):
 def preproc(X, side):
     '''Crops, downsamples, desaturates, etc. the rgb pendulum observation.'''
     X = X[...,0][440:-220,330:-330] - X[...,1][440:-220,330:-330]
-    return scipy.misc.imresize(X, [int(side), side]) / 255.
+    #return scipy.misc.imresize(X, [int(side), side]) / 255.
+#    return scipy.misc.imresize(X, [int(side), side]) / 255.
+#    im = Image.fromarray(X);
+    return np.array(Image.fromarray(X).resize([int(side), side]))/255.
+
 
 def sample_gym(seed=0, timesteps=103, trials=200, side=28, min_angle=0., max_angle=np.pi/6, 
               verbose=False, env_name='Pendulum-v0'):

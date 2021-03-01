@@ -96,3 +96,5 @@ class PixelHNN(torch.nn.Module):
         z = self.encode(x)
         z_next = z + self.time_derivative(z)
         return self.decode(z_next)
+
+    

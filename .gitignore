@@ -6,7 +6,6 @@
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 .pytest_cache
-*.tar
 *.zip
 *.pkl
 __pycache__
